@@ -1,2 +1,21 @@
+# Dependencies
 node_modules/
+
+# Secrets — never commit real keys
 .env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+build/
+
+# Logs / runtime artifacts
+*.log
+audit-log.jsonl
+
+# OS / editor noise
+.DS_Store
+.idea/
+.vscode/
+*.swp

@@ -1,10 +1,12 @@
-import * as readline from "readline";
+import * as readline from "node:readline";
 import { Command } from "@langchain/langgraph";
 import { app } from "./graph.js";
 import { streamRun } from "./runner.js";
+import { writeAudit } from "./audit.js";
 
 async function main() {
-  const config = { configurable: { thread_id: "report-001" } };
+  const threadId = "report-001";
+  const config = { configurable: { thread_id: threadId } };
 
   // A security bug -> exercises the human-approval path in one run.
   const report = `
@@ -13,10 +15,7 @@ async function main() {
   `;
 
   console.log("=== Sample run: bug-report triage ===\n");
-  const pending = await streamRun(
-    { rawReport: report, classification: null },
-    config,
-  );
+  const pending = await streamRun({ rawReport: report }, config);
 
   // If the graph paused at the interrupt, ask a real human, then resume.
   if (pending) {
@@ -38,6 +37,19 @@ async function main() {
   const final = await app.getState(config);
   console.log("\n=== Final resolution ===");
   console.log(final.values.resolution);
+
+  // Decision audit log: what was classified, which route, why.
+  await writeAudit({
+    timestamp: new Date().toISOString(),
+    threadId,
+    report: final.values.cleanReport,
+    classification: final.values.classification,
+    decision: final.values.decision,
+    resolution: final.values.resolution,
+  });
 }
 
-main().catch(console.error);
+main().catch((err) => {
+  console.error("\n[fatal]", err.message ?? err);
+  process.exit(1);
+});

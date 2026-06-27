@@ -1,0 +1,9 @@
+services:
+  triage:
+    build: .
+    # Reads ANTHROPIC_API_KEY (and optional ANTHROPIC_MODEL) from your .env file.
+    env_file:
+      - .env
+    # Keep stdin open + allocate a TTY so the human-approval prompt works.
+    stdin_open: true
+    tty: true
